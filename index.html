@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1f7a6d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="破冰器">
+<meta name="description" content="社工破冰器 · 离线可用 · 隐私本地保存 · 接案前 3 分钟现场破冰辅助">
+<title>社工破冰器</title>
+<style>
+/* ===================== 主题变量 ===================== */
+:root{
+  --green:#1f7a6d; --green-d:#155a50; --green-l:#e7f4f1;
+  --orange:#e8873a; --ink:#22302e; --gray:#6b7a78; --line:#e3ebea;
+  --bg:#f5f7f6; --card:#ffffff; --red:#c9534b; --red-bg:#fdeeee;
+  --note-bg:#f7faf9; --chip-sel:var(--green-l); --opt-sel:#fdf1e7;
+  --shade:rgba(0,0,0,.08); --safe:env(safe-area-inset-bottom,0px);
+  --fs:1; --radius:14px; --t:.22s;
+}
+html[data-theme="dark"]{
+  --green:#37c2ad; --green-d:#a6f2e6; --green-l:#15302b;
+  --orange:#f0a35e; --ink:#e8f1ef; --gray:#9fb0ad; --line:#2a3733;
+  --bg:#0e1514; --card:#16201e; --red:#ef8a82; --red-bg:#3a201e;
+  --note-bg:#1b2624; --chip-sel:#15302b; --opt-sel:#3a2a1c;
+  --shade:rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:calc(16px * var(--fs))}
+body{
+  margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","WenQuanYi Micro Hei",sans-serif;
+  font-size:1rem;padding-bottom:calc(64px + var(--safe));
+  transition:background var(--t) ease,color var(--t) ease;
+  -webkit-text-size-adjust:100%;
+}
+button{font-family:inherit;cursor:pointer;border:none;outline:none;font-size:1rem;color:inherit}
+input,textarea,select{font-size:1rem;color:inherit}
+.app{display:none}
+.app.show{display:block}
+:focus-visible{outline:2.5px solid var(--green);outline-offset:2px;border-radius:8px}
+
+/* ===================== 页头 ===================== */
+header{position:sticky;top:0;z-index:20;background:var(--green);color:#fff;
+  padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top));
+  box-shadow:0 2px 12px var(--shade);transition:background var(--t) ease}
+header h1{margin:0;font-size:1.18rem;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+header p{margin:3px 0 0;font-size:.75rem;opacity:.9}
+.badge{display:inline-block;background:rgba(255,255,255,.18);font-size:.68rem;padding:1px 8px;border-radius:20px}
+#gear{position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  background:rgba(255,255,255,.16);color:#fff;border-radius:10px;width:36px;height:36px;font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;transition:transform var(--t),background var(--t)}
+#gear:active{transform:translateY(-50%) scale(.9)}
+#gear.spin{animation:spin 6s linear infinite}
+@keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
+
+/* ===================== 步骤条 ===================== */
+.stepper{display:flex;gap:6px;padding:12px 14px;background:var(--card);border-bottom:1px solid var(--line);
+  overflow-x:auto;transition:background var(--t) ease,border-color var(--t) ease}
+.stepper::-webkit-scrollbar{display:none}
+.step{flex:0 0 auto;text-align:center;min-width:58px}
+.step .n{width:26px;height:26px;margin:0 auto;border-radius:50%;background:var(--note-bg);color:var(--gray);
+  font-size:.8rem;font-weight:700;line-height:26px;transition:all var(--t)}
+.step.on .n{background:var(--green);color:#fff;box-shadow:0 2px 8px var(--shade)}
+.step.done .n{background:var(--green-l);color:var(--green)}
+.step .t{font-size:.62rem;color:var(--gray);margin-top:2px;white-space:nowrap}
+.step.on .t{color:var(--green);font-weight:700}
+#stepper.dim{visibility:hidden;height:0;padding:0;border:none}
+
+/* ===================== 卡片 ===================== */
+main{padding:14px}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:14px;
+  box-shadow:0 1px 6px var(--shade);animation:cardIn .3s ease;transition:background var(--t) ease}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card h2{margin:0 0 4px;font-size:1rem}
+.card .sub{margin:0 0 14px;font-size:.78rem;color:var(--gray)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.chip,.opt{border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:12px 14px;
+  font-size:.88rem;color:var(--ink);transition:transform .12s,background var(--t),border-color var(--t);
+  flex:1 1 calc(50% - 4px);min-width:140px;text-align:left}
+.chip:active,.opt:active{transform:scale(.97)}
+.chip.sel{border-color:var(--green);background:var(--chip-sel);color:var(--green-d);font-weight:700}
+.opt.sel{border-color:var(--orange);background:var(--opt-sel);color:var(--orange);font-weight:700}
+.chip small,.opt small{display:block;font-size:.72rem;color:var(--gray);font-weight:400;margin-top:2px}
+.chip.sel small{color:var(--green)}
+.opt.sel small{color:var(--orange)}
+.full{flex:1 1 100%}
+.script{background:var(--chip-sel);border-left:4px solid var(--green);border-radius:8px;padding:12px 14px;
+  font-size:.94rem;margin:10px 0;color:var(--green-d);transition:background var(--t) ease}
+.script .who{font-size:.72rem;color:var(--green);font-weight:700;letter-spacing:.5px}
+.script.no{background:var(--red-bg);border-left-color:var(--red);color:var(--red)}
+.script.no .who{color:var(--red)}
+.copy{font-size:.75rem;color:var(--green);background:none;border:1px solid var(--green);border-radius:20px;
+  padding:4px 12px;margin-top:6px;transition:transform .12s}
+.copy:active{transform:scale(.94)}
+.note{font-size:.75rem;color:var(--gray);background:var(--note-bg);border-radius:8px;padding:10px 12px;margin-top:10px;
+  transition:background var(--t) ease}
+code{background:var(--note-bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:.82em;
+  font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--green-d)}
+
+/* ===================== 计时器 ===================== */
+.timer{text-align:center;padding:10px 0;position:relative}
+.ring{position:relative;width:170px;height:170px;margin:0 auto}
+.ring svg{transform:rotate(-90deg)}
+.ring .track{fill:none;stroke:var(--line);stroke-width:9}
+.ring .prog{fill:none;stroke:var(--green);stroke-width:9;stroke-linecap:round;
+  transition:stroke-dashoffset .25s linear,stroke var(--t)}
+.ring .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.timer .big{font-size:2.9rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--green);line-height:1;transition:color var(--t)}
+.timer .big.warn{color:var(--orange)}
+.timer .big.hot{color:var(--red)}
+.timer .lbl{font-size:.78rem;color:var(--gray);margin-top:4px}
+.btnrow{display:flex;gap:10px;margin-top:14px}
+.btn{flex:1;border-radius:12px;padding:13px;font-size:.95rem;font-weight:700;color:#fff;background:var(--green);
+  transition:transform .12s,opacity var(--t),background var(--t)}
+.btn.ghost{background:var(--card);color:var(--green);border:1.5px solid var(--green)}
+.btn.orange{background:var(--orange)}
+.btn:active{transform:scale(.97);opacity:.9}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.hint{margin-top:12px;font-size:.82rem;color:var(--ink);background:var(--note-bg);border-radius:10px;padding:10px 12px;min-height:44px;
+  transition:background var(--t) ease}
+.hint b{color:var(--orange)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;flex:0 0 auto}
+
+/* ===================== 评分 / 表单 ===================== */
+.scale{display:flex;gap:8px;margin-top:10px}
+.scale .lvl{flex:1;text-align:center;border-radius:12px;padding:12px 6px;border:1.5px solid var(--line);background:var(--card);
+  font-size:.82rem;transition:transform .12s,background var(--t),border-color var(--t)}
+.scale .lvl:active{transform:scale(.97)}
+.scale .lvl.sel{border-color:var(--green);background:var(--chip-sel);color:var(--green-d);font-weight:700}
+input[type=text],input[type=date],input[type=number],textarea,select{width:100%;border:1.5px solid var(--line);border-radius:10px;
+  padding:11px 12px;font-size:.95rem;font-family:inherit;color:var(--ink);background:var(--card);transition:border-color var(--t),background var(--t)}
+textarea{min-height:70px;resize:vertical}
+.field{margin-bottom:12px}
+.field label{font-size:.82rem;color:var(--gray);display:block;margin-bottom:5px}
+
+/* ===================== 结果 / 话术 ===================== */
+.summary{background:var(--chip-sel);border-radius:12px;padding:14px;margin-top:8px;transition:background var(--t) ease}
+.summary .line{font-size:.88rem;margin-bottom:6px}
+.summary .line b{color:var(--green-d)}
+.kbd{display:inline-block;background:var(--note-bg);border-radius:6px;padding:0 6px;font-size:.78rem;color:var(--gray)}
+footer{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);
+  display:flex;padding-bottom:var(--safe);transition:background var(--t) ease}
+footer button{flex:1;padding:11px 0 12px;font-size:.8rem;color:var(--gray);background:var(--card);
+  display:flex;flex-direction:column;align-items:center;gap:3px;transition:color var(--t),background var(--t)}
+footer button .ico{font-size:1.25rem;line-height:1}
+footer button.on{color:var(--green);font-weight:700}
+footer button.on .ico{transform:scale(1.12);transition:transform var(--t)}
+.tips li{margin-bottom:10px;font-size:.88rem}
+.tips b{color:var(--green-d)}
+.search{border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:12px;font-size:.95rem;width:100%;
+  background:var(--card);transition:border-color var(--t),background var(--t)}
+.bphrase{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;
+  transition:background var(--t),border-color var(--t)}
+.bphrase .q{font-size:.85rem;color:var(--ink);font-weight:700;display:flex;align-items:flex-start;gap:6px}
+.bphrase .a{font-size:.88rem;color:var(--green-d);margin-top:5px;background:var(--chip-sel);border-radius:8px;padding:9px 11px;
+  transition:background var(--t) ease}
+.bphrase .w{font-size:.82rem;color:var(--red);margin-top:5px}
+.bphrase .star{margin-left:auto;background:none;border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-size:.95rem;color:var(--gray)}
+.bphrase .star.on{color:var(--orange);border-color:var(--orange)}
+.bphrase .del{background:none;border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-size:.72rem;color:var(--red)}
+.empty{text-align:center;color:var(--gray);padding:40px 16px;font-size:.9rem}
+.empty .big{font-size:2.4rem;display:block;margin-bottom:8px}
+/* 话术分类 chips */
+.catrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.cchip{border:1.5px solid var(--line);background:var(--card);border-radius:20px;padding:6px 12px;font-size:.8rem;color:var(--gray);transition:all var(--t)}
+.cchip:active{transform:scale(.96)}
+.cchip.sel{border-color:var(--green);background:var(--chip-sel);color:var(--green-d);font-weight:700}
+/* 专业速查卡 */
+.ref .kv{font-size:.82rem;color:var(--ink);background:var(--note-bg);border-radius:8px;padding:9px 11px;margin-bottom:8px;line-height:1.55}
+.ref .kv b{color:var(--green-d)}
+.ref .kv.danger{background:#fdeeee;border-left:3px solid var(--red);color:#8d3b35}
+.ref .kv.danger b{color:var(--red)}
+
+/* ===================== 案主档案 ===================== */
+.case{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;
+  transition:background var(--t),border-color var(--t)}
+.case .ch{display:flex;align-items:center;gap:8px;cursor:pointer}
+.case .ch .nm{font-size:1rem;font-weight:700}
+.case .ch .meta{font-size:.74rem;color:var(--gray);margin-top:2px}
+.tag{font-size:.66rem;background:var(--chip-sel);color:var(--green-d);padding:1px 7px;border-radius:10px;font-weight:700}
+.case .arr{margin-left:auto;color:var(--gray);transition:transform var(--t);font-size:1rem}
+.case.open .arr{transform:rotate(180deg)}
+.prog{height:7px;border-radius:6px;background:var(--note-bg);overflow:hidden;margin:10px 0}
+.prog>i{display:block;height:100%;background:var(--green);border-radius:6px;transition:width .4s ease}
+.case .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.mini{flex:1;min-width:90px;border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:9px;
+  font-size:.8rem;color:var(--ink);transition:transform .12s,border-color var(--t)}
+.mini:active{transform:scale(.96)}
+.mini.danger{color:var(--red);border-color:var(--red)}
+.mini.ok{border-color:var(--green);color:var(--green)}
+.case .detail{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px;display:none}
+.case.open .detail{display:block;animation:cardIn .25s ease}
+.fu{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.84rem}
+.fu .fd{font-weight:700;min-width:84px}
+.fu .fn{flex:1;color:var(--gray)}
+.fu.done .fd,.fu.done .fn{text-decoration:line-through;opacity:.6}
+.fu .ck{background:none;border:1.5px solid var(--line);border-radius:8px;padding:2px 8px;font-size:.72rem}
+.fu .ck.on{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* ===================== 抽屉 / 弹窗 ===================== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;opacity:0;pointer-events:none;transition:opacity var(--t)}
+.overlay.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(88vw,340px);background:var(--card);z-index:50;
+  transform:translateX(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);padding:18px 16px calc(20px + var(--safe));
+  overflow-y:auto;box-shadow:-4px 0 20px var(--shade)}
+.drawer.on{transform:none}
+.drawer h3{margin:6px 0 14px;font-size:1.05rem;display:flex;align-items:center;gap:8px}
+.drawer .close{margin-left:auto;background:var(--note-bg);border-radius:10px;width:32px;height:32px;font-size:1.1rem}
+.setrow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.setrow .desc{font-size:.7rem;color:var(--gray);margin-top:2px}
+.switch{position:relative;width:48px;height:28px;border-radius:20px;background:var(--line);transition:background var(--t);flex:0 0 auto}
+.switch.on{background:var(--green)}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform var(--t);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.switch.on::after{transform:translateX(20px)}
+.slider{width:100%;margin-top:6px}
+.sliderval{font-weight:700;color:var(--green)}
+.setgroup{font-size:.74rem;color:var(--gray);font-weight:700;margin:18px 0 4px;letter-spacing:1px}
+.drawer .btn{margin-top:10px}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-48%) scale(.96);z-index:60;width:min(92vw,420px);
+  background:var(--card);border-radius:16px;padding:18px;opacity:0;pointer-events:none;transition:all .22s ease;
+  box-shadow:0 10px 40px rgba(0,0,0,.4);max-height:86vh;overflow-y:auto}
+.modal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.modal h3{margin:0 0 12px;font-size:1.05rem}
+.modal label{font-size:.78rem;color:var(--gray);display:block;margin:10px 0 4px}
+.modal textarea{min-height:54px}
+
+/* ===================== 提示 ===================== */
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%) translateY(10px);background:rgba(34,48,46,.95);color:#fff;
+  padding:10px 18px;border-radius:24px;font-size:.85rem;z-index:99;opacity:0;transition:.25s;pointer-events:none;max-width:86vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.hidden{display:none}
+.v-in{animation:viewIn .26s ease}
+@keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ===================== 减弱动效 ===================== */
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+html.reduce *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+
+/* 大屏适配 */
+@media(min-width:680px){
+  main{max-width:620px;margin:0 auto}
+  .stepper{max-width:620px;margin:0 auto}
+}
+</style>
+</head>
+<body>
+<div id="app" class="app">
+
+<header>
+  <h1>🧊 社工破冰器 <span class="badge" id="hdrTag">I 型模式</span></h1>
+  <p>接案前 3 分钟 · 现场破冰 · 事后留后门</p>
+  <button id="gear" aria-label="设置：深色模式、字体、数据备份" title="设置">⚙️</button>
+</header>
+
+<div class="stepper" id="stepper"></div>
+<main id="view" aria-live="polite"></main>
+
+<footer>
+  <button data-page="flow" class="on"><span class="ico">🧊</span>破冰流程</button>
+  <button data-page="phrases"><span class="ico">💬</span>话术库</button>
+  <button data-page="cases"><span class="ico">📁</span>档案</button>
+  <button data-page="install"><span class="ico">📲</span>装到手机</button>
+</footer>
+</div>
+
+<!-- 设置抽屉 -->
+<div class="drawer" id="drawer" role="dialog" aria-label="设置" aria-modal="true">
+  <h3>⚙️ 设置与数据 <button class="close" id="drawerClose" aria-label="关闭">✕</button></h3>
+
+  <div class="setrow">
+    <div>
+      <div>深色模式</div>
+      <div class="desc">夜间 / 弱光环境更护眼</div>
+    </div>
+    <button class="switch" id="swDark" role="switch" aria-checked="false" aria-label="深色模式"></button>
+  </div>
+  <div class="setrow" style="display:block">
+    <div>字体大小 <span class="sliderval" id="fsVal">标准</span></div>
+    <input type="range" class="slider" id="fsSlider" min="0.85" max="1.4" step="0.05" value="1" aria-label="字体大小">
+  </div>
+  <div class="setrow">
+    <div>
+      <div>震动反馈</div>
+      <div class="desc">沉默超时震动提醒（支持设备）</div>
+    </div>
+    <button class="switch" id="swVib" role="switch" aria-checked="true" aria-label="震动反馈"></button>
+  </div>
+  <div class="setrow">
+    <div>
+      <div>提示音</div>
+      <div class="desc">到达节点轻响一声</div>
+    </div>
+    <button class="switch" id="swSnd" role="switch" aria-checked="true" aria-label="提示音"></button>
+  </div>
+  <div class="setrow">
+    <div>
+      <div>减弱动效</div>
+      <div class="desc">晕动 / 低性能设备</div>
+    </div>
+    <button class="switch" id="swReduce" role="switch" aria-checked="false" aria-label="减弱动效"></button>
+  </div>
+
+  <div class="setgroup">隐私边界（§2/§13：memo 与案主明细仅本机存储、不上传）</div>
+  <div class="setrow">
+    <div>
+      <div>导出脱敏版</div>
+      <div class="desc">去姓名/可识别信息，用于外发、交接、归档合规</div>
+    </div>
+    <button class="switch" id="swAnon" role="switch" aria-checked="false" aria-label="导出脱敏版"></button>
+  </div>
+
+  <div class="setgroup">本地数据（不上传任何服务器）</div>
+  <button class="btn" id="btnExport">⬇️ 导出 / 备份全部数据</button>
+  <button class="btn ghost" id="btnImport">⬆️ 导入 / 恢复备份</button>
+  <input type="file" id="fileInput" accept="application/json,.json" class="hidden" aria-hidden="true">
+  <button class="btn ghost danger" id="btnClear" style="color:var(--red);border-color:var(--red)">🗑️ 一键清空全部数据</button>
+  <div class="note">所有数据仅存于本机浏览器。导出文件请妥善保存在本地或云盘，换设备或清缓存后可用「导入」恢复，避免丢失案主档案与历史。</div>
+
+  <div class="setgroup">分享 / 部署（做成可分享的网站）</div>
+  <button class="btn" id="btnShare">🔗 复制分享链接（当前方案）</button>
+  <button class="btn ghost" id="btnDlSite">⬇️ 下载单文件网页（可发送 / 托管）</button>
+  <div class="note">把当前方案编码进链接发给同事，对方打开即载入同一场景（<b>不含姓名等隐私字段</b>）。部署到任意静态空间（GitHub Pages / Netlify Drop / 网盘 / 内网服务器）即可变成团队可访问的网站，详见「装到手机」页底部。</div>
+</div>
+
+<!-- 自定义话术弹窗 -->
+<div class="modal" id="phraseModal" role="dialog" aria-label="添加自定义话术" aria-modal="true">
+  <h3>➕ 添加自定义话术</h3>
+  <label>情景 / 问题</label>
+  <input type="text" id="pa_q" placeholder="例如：对方反复确认同一件事">
+  <label>✅ 可以说这句</label>
+  <textarea id="pa_a" placeholder="直接可说的话术"></textarea>
+  <label>❌ 别这么说</label>
+  <input type="text" id="pa_w" placeholder="容易踩雷的表达（可空）">
+  <label>🧠 原理 / 为什么</label>
+  <textarea id="pa_s" placeholder="背后的逻辑，方便回忆（可空）"></textarea>
+  <div class="btnrow">
+    <button class="btn ghost" id="paCancel">取消</button>
+    <button class="btn" id="paSave">保存</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ============ 基础数据（对齐 IcebreakingCase 数据模型 §2–§4） ============ */
+/* SCENES：§3 接触场景 + 环境线索（座位 / 隐私等级 / 安全等级） */
+const SCENES = [
+  {id:'home', n:'入户走访', t:'上门第一次见面', env:{seat:'低半阶、不坐正对面', privacy:'中', safety:'先观察再进门'},
+   tip:'别站门口，先低半阶台阶，让对方掌握门的开合。'},
+  {id:'station', n:'站内接待', t:'案主来站点', env:{seat:'圆桌/斜坐', privacy:'低', safety:'站点可控'},
+   tip:'先倒水、给张纸巾，坐下再开口，别站着问。'},
+  {id:'phone', n:'电话联系', t:'先打通再说', env:{seat:'—', privacy:'低', safety:'无法现场判断'},
+   tip:'开口报站名+姓氏，前 15 秒说清"为什么打给你"。'},
+  {id:'refer', n:'转介接收', t:'别人推来的', env:{seat:'第三方可能在场', privacy:'中', safety:'先处理被安排感'},
+   tip:'先处理"被安排"的抵触，再谈事情。'},
+  {id:'outreach', n:'街头外展', t:'主动接触边缘/流浪', env:{seat:'开放空间', privacy:'低', safety:'公共、留退路'},
+   tip:'不堵路、不围人，先递张名片再说。'},
+  {id:'online', n:'视频/线上', t:'微信/视频联系', env:{seat:'镜头平视', privacy:'中', safety:'注意背景与同住者'},
+   tip:'镜头与眼同高，别俯视；先问"现在方便开摄像头吗"。'},
+  {id:'group', n:'小组活动', t:'活动/团体场景', env:{seat:'半圆围坐', privacy:'低', safety:'群体压力'},
+   tip:'先破冰再分组，给沉默者"不发言"的权利。'}
+];
+/* TYPES：§4 案主类型 + 性格四维（E/I、快/慢、表达欲、初始信任）+ §5 节奏倍率（rhythm）
+   rhythm 驱动一切：默认沉默基准 8s × rhythm；I 型 ×1.5、高防御 ×1.8、认知障碍 ×2.0、外向 ×0.8 */
+const TYPES = [
+  {id:'active', n:'主动求助', t:'自己找来的', slow:false, rhythm:1.0, ei:'E', speed:'快', express:'高', trust:'中'},
+  {id:'passive', n:'被动转介', t:'社区/学校/警方推来', slow:true, rhythm:1.2, ei:'—', speed:'中', express:'中', trust:'低'},
+  {id:'introvert', n:'I 型 / 慢热', t:'话少、需时间', slow:true, rhythm:1.5, ei:'I', speed:'慢', express:'低', trust:'低'},
+  {id:'defense', n:'高防御', t:'曾被走访伤过', slow:true, rhythm:1.8, ei:'—', speed:'慢', express:'低', trust:'极低'},
+  {id:'cognitive', n:'认知障碍', t:'记忆/判断受限', slow:true, rhythm:2.0, ei:'—', speed:'慢', express:'中', trust:'低'},
+  {id:'extrovert', n:'外向健谈', t:'话多、易跑题', slow:false, rhythm:0.8, ei:'E', speed:'快', express:'高', trust:'中'}
+];
+const TONE = [
+  {id:'t', n:'放松陪聊', s:'先不说正事，聊 5 分钟生活，让对方卸一点'},
+  {id:'b', n:'边界交代', s:'先说清保密范围与例外，安全感上来再问'},
+  {id:'d', n:'直接切入', s:'对方已主动，可直奔主题，但仍先亮身份'}
+];
+const OPEN = {
+  home:{a:'{name}您好，我是 {unit} 的小{me}，今天过来不是要您填什么，就是先认识一下、认个门。',
+        b:'您说的我不会往外传，除非有伤人伤己的情况，那种我得上报，先跟您说清楚。',
+        c:'您随便说点最近的日子就行，吃得好不好、有没有人说话、烦不烦都行。'},
+  station:{a:'{name}您好，我是 {unit} 的小{me}，今天没什么要您做的，先喝口水歇会儿。',
+        b:'咱聊天的内容我会保密，只有一种情况例外——要是您说有伤自己或伤别人的打算，我得往上报，先跟您讲明白。',
+        c:'您想从哪儿聊起都行，不着急，慢慢说。'},
+  phone:{a:'您好，我是 {unit} 的小{me}，您现在说话方便吗？不方便我换个时间打。',
+        b:'这次通话不是登记，就是先跟您通个气，内容我会保密。',
+        c:'占用您两三分钟就行，我先说下我们站平时能帮上什么，您再决定要不要往下聊。'},
+  refer:{a:'{name}您好，我是 {unit} 的小{me}。我知道您不是自己想见我，是 {who} 那边跟我们打了个招呼。',
+        b:'我这次来不是要查您，也不是来给您贴标签的，先说清这个。',
+        c:'您对我、对这个事有啥想法，都可以直说，哪怕是"不想见"也算数。'},
+  outreach:{a:'{name}您好，我是 {unit} 的小{me}。我不拦您，就先递张名片，您有需要随时找我。',
+        b:'今天不登记、也不追问，您方便的时候再说。',
+        c:'您先忙，想聊的时候微信或者到站点都行。'},
+  online:{a:'{name}您好，我是 {unit} 的小{me}。现在开摄像头方便吗？不方便我关掉也行。',
+        b:'视频里说的和线下一样保密，只有伤己伤人的情况我得上。',
+        c:'您想从哪儿聊起都行，不着急。'},
+  group:{a:'大家好，我是 {unit} 的小{me}。今天就是聚聚，不点名、不发言也完全 OK。',
+        b:'在这儿说的，出去我不往外传。',
+        c:'想说就说，不想说就听，都挺好。'}
+};
+const NO = {
+  home:['有啥要问的直接问吧','家里几口人？收入多少？','你这情况到底怎么回事？'],
+  station:['先把这张表填了','说说你的困难','为什么不去找亲戚？'],
+  phone:['方便了解一下您的情况','您把身份证号报我一下','您听我说完'],
+  refer:['他们让我来看看你','你知不知道给你惹了多大麻烦','配合一下，我好交差'],
+  outreach:['跟我走一趟吧','你这情况很危险','先登个记'],
+  online:['把摄像头打开','你旁边还有谁','截图发我看看'],
+  group:['你来说说你的情况','大家都看着你呢','别闷着，讲讲']
+};
+/* CARDS：§7 破冰卡片（系统最小执行单元）。字段对齐文档：
+   card_id 规范值 / trigger 触发条件 / say 能说的 / avoid_say 千万别说的
+   why 原理 / priority 必做(must)·推荐(rec)·可选(opt) / types·scenes 过滤维度 */
+const PRI = {must:'必做', rec:'推荐', opt:'可选'};
+const CARDS = [
+  {card_id:'env_anchor', t:'环境破冰', priority:'rec', types:['*'], scenes:['*'],
+   trigger:'进门别坐正对面，先看一眼环境，挑一个不敏感的点说一句。',
+   say:'这盆绿萝养得挺精神。 / 您家猫碗挺讲究啊。',
+   avoid_say:'家里几口人？收入多少？',
+   why:'"家里几口人"是审讯，"绿萝养得好"是安全话题，能让人松口气。'},
+  {card_id:'silence_wait', t:'沉默容错', priority:'must', types:['*'], scenes:['*'],
+   trigger:'对方停了，别急着补话。按节奏倍率等够秒数，沉默不是冷场。',
+   say:'(安静看着对方，不说话)',
+   avoid_say:'你怎么不说话？',
+   why:'内向者需要"想的时间"。你一补话，他就顺着你的话走了，真话没了。'},
+  {card_id:'observe_not_ask', t:'观察代替追问', priority:'rec', types:['*'], scenes:['*'],
+   trigger:'把问句换成观察句，把判断权还给对方。',
+   say:'我注意到您刚才顿了一下。 / 您说到这儿的时候低了下头。',
+   avoid_say:'你到底怎么想？',
+   why:'问句像审问，观察句是"我看见你了"，防御立刻低一档。'},
+  {card_id:'segmented_q', t:'分段提问', priority:'rec', types:['*'], scenes:['*'],
+   trigger:'一次只问一件事，问完等。连珠炮是破冰杀手。',
+   say:'最近睡得怎么样？……（等）那吃饭呢？',
+   avoid_say:'你家庭工作身体都怎么样？',
+   why:'I 型处理多问句会直接关掉，宁慢勿快。'},
+  {card_id:'text_fallback', t:'文字兜底', priority:'rec',
+   types:['introvert','passive','defense','cognitive'], scenes:['*'],
+   trigger:'临走留一条微信，让对方有"文字出口"。',
+   say:'今天先到这儿，您想到啥随时微信回我，打字比当面说轻松。',
+   avoid_say:'',
+   why:'很多内向者在文字里才说得出口，这是第二次机会。'},
+  {card_id:'stop_in_time', t:'见好就收', priority:'must', types:['*'], scenes:['*'],
+   trigger:'对方眼神飘、答句变短、身体转向门——就收尾。',
+   say:'今天先到这儿，不打扰您了，下次我来之前先给您发个微信行不？',
+   avoid_say:'下周几我再来？',
+   why:'聊过头一次，就没有第二次了。宁可短，不可长。'},
+  {card_id:'defense_no_record', t:'高防御专用', priority:'opt',
+   types:['defense','cognitive'], scenes:['*'],
+   trigger:'第一次只露脸、不填表、不带本子。',
+   say:'这次我不带表，也不用笔记您说的，就聊几句。',
+   avoid_say:'我先记一下您说的。',
+   why:'纸笔 = 被记录 = 被处理，对防御型是二次伤害。'},
+  {card_id:'online_cam', t:'视频/线上边界', priority:'rec', types:['*'], scenes:['online'],
+   trigger:'线上先征询摄像头与背景，降低被监视感。',
+   say:'现在开摄像头方便吗？不方便我关掉也行。', avoid_say:'把摄像头打开。',
+   why:'线上隐私感更低，先给对方控制权，信任才进得来。'},
+  {card_id:'group_no_call', t:'小组不点名', priority:'rec', types:['*'], scenes:['group'],
+   trigger:'团体场景给沉默者"不发言"的权利。',
+   say:'今天不点名、不发言也完全 OK，想说就说。', avoid_say:'你来说说你的情况。',
+   why:'群体压力下被点名会触发防御，自愿才开口。'},
+  {card_id:'outreach_no_block', t:'街头不围堵', priority:'rec', types:['*'], scenes:['outreach'],
+   trigger:'外展先递名片、不堵路、不围人。',
+   say:'我不拦您，先递张名片，您有需要随时找我。', avoid_say:'跟我走一趟吧。',
+   why:'街头边缘人群警惕性高，留退路才有下一次接触。'}
+];
+/* 话术库（§13）：每条 = 情景(q) / 能说(a) / 别说(w) / 原理(s) / 分类(cat) */
+const PHRASES = [
+  {q:'对方一直不说话', a:'不急，您慢慢想，我先喝口水。', w:'你怎么不说话？ / 你到底有没有困难？',
+   s:'真低头别盯，给对方"可以不回答"的安全感。', cat:'沉默尴尬'},
+  {q:'对方只回"还行""没什么"', a:'我刚来也不太熟这地方，要不我先说点我们站平时能帮上什么，您听个响也行。',
+   w:'那你到底想不想帮忙？', s:'先给对方价值，他才愿意给你信息。', cat:'沉默尴尬'},
+  {q:'对方突然说一句关键的又停了', a:'您刚说"反正也没人管"——这句我接住了，咱要不就聊这句？',
+   w:'继续啊，还有呢？', s:'抓住那一句，别让真话滑过去。', cat:'倾听回应'},
+  {q:'对方情绪激动在哭', a:'没事，您慢慢哭，我在。不用现在说，等您缓过来。', w:'您别哭了，冷静点。',
+   s:'递纸巾、降语速、拉长停顿，哭完才有真话。', cat:'情绪危机'},
+  {q:'对方在赶你走 / 说"不用你管"', a:'好，那我今天就到这儿。这是我的微信，哪天想聊了发我一句就行。',
+   w:'这对您有好处，您配合一下。', s:'留后门比硬留人有效一百倍。', cat:'情绪危机'},
+  {q:'对方开始抱怨政策/社区/上一家机构', a:'您说，我在听。这些事我不一定能改，但我先记下来。',
+   w:'这个我们也没办法 / 您别针对个人。', s:'先接情绪，不接立场，不辩解。', cat:'情绪危机'},
+  {q:'对方问"你会不会上报"', a:'会的，但分情况：一般的事我不会说；只有伤自己、伤别人、或被虐待这几种，我才得上。',
+   w:'您放心，不会的。（其实是会的）', s:'边界提前讲清，反而更可信。', cat:'边界保密'},
+  {q:'对方把孩子/家人挡在前面', a:'今天不谈孩子，先只聊您自己。您最近睡得好吗？', w:'孩子的问题才是重点吧？',
+   s:'家长往往因为"怕孩子被带走"而闭嘴，先让她当她自己。', cat:'特殊人群'},
+  {q:'第二次见面开口', a:'上次您说喜欢养多肉，我路过看到这盆，想起您了。', w:'上次说的那个事，后来怎么样了？',
+   s:'用上次记下的锚点开场，说明"我记得你"，这是关系。', cat:'收尾回访'},
+  {q:'临走收尾', a:'今天不算正式谈，就是认个门。您啥时候想聊了发我就行。', w:'下周几我再来？',
+   s:'把主动权给回去，下次见面质量完全不同。', cat:'收尾回访'},
+  /* —— 以下为扩充（基于 OARS / 三技巧 / 3F / 保密例外 / 各人群沟通） —— */
+  {q:'第一次进门，怎么自然开口不尴尬？', a:'李阿姨，我昨天给您打过电话说今天有空，就上来看看您，跟您说说话。',
+   w:'我是来查您家情况的。', s:'用"正好路过/昨天约过"降低被审视感，把主动权先交给对方。', cat:'破冰开口'},
+  {q:'对方只愿在门口说话、不肯让进门？', a:'您方便的话我在门口站会儿也行，不急着进屋，您舒服最重要。',
+   w:'就进去坐坐嘛，不进屋怎么聊。', s:'把门的开合权留给对方；能进是信任，进不去先攒信任。', cat:'破冰开口'},
+  {q:'电话接通，第一句怎么讲？', a:'您好，我是XX站的小张，您现在说话方便吗？不方便我换个时间打。',
+   w:'您把身份证号报我一下。', s:'先确认方便、再亮身份，避免"被突袭"的防御。', cat:'破冰开口'},
+  {q:'案主是被社区/警方推来的，怎么开口？', a:'我知道您不是自己想见我，是那边跟我打了个招呼；您要是不想聊，也算数。',
+   w:'他们让我来看看你。', s:'先处理"被安排"的抵触，承认被动，防御立刻低一档。', cat:'破冰开口'},
+  {q:'带小组或活动时，怎么开场？', a:'今天就是聚聚，不点名、不发言也完全 OK，想说就说。',
+   w:'你来说说你的情况。', s:'团体压力会触发防御，先给"可以不说"的安全感。', cat:'破冰开口'},
+  {q:'微信/视频联系，怎么开场？', a:'现在开摄像头方便吗？不方便我关掉也行，咱们怎么舒服怎么来。',
+   w:'把摄像头打开。', s:'线上隐私感更低，先征询控制权。', cat:'破冰开口'},
+  {q:'街头/外展遇到边缘人群，怎么搭话？', a:'我不拦您，先递张名片，您有需要随时找我，不着急。',
+   w:'跟我走一趟吧 / 先登个记。', s:'不堵路、不围人，留退路才有下一次接触。', cat:'破冰开口'},
+  {q:'对方正在忙（做饭/干活），怎么不打断？', a:'您先忙您的，我就坐这儿等您会儿，不急。',
+   w:'站着催"说一下就行"。', s:'尊重对方的生活节奏，社工是客人不是查岗。', cat:'破冰开口'},
+  {q:'对方说了很多，我该怎么接才不会乱？', a:'我听下来，您最在意的其实是……我理解得对吗？',
+   w:'所以您的意思是……（抢着总结）', s:'摘要复述让对方确认，避免你以为是、其实不是。', cat:'倾听回应'},
+  {q:'怎么把对方的情绪"照镜子"说出来？', a:'听下来，这件事让您挺委屈 / 难受的。',
+   w:'您别难过 / 这没什么大不了的。', s:'反映式倾听：把情绪像镜子一样说出来，不评判、不劝。', cat:'倾听回应'},
+  {q:'想让对方多说，怎么问？', a:'您可以跟我说说，最近这段时间过得怎么样吗？',
+   w:'你最近是不是过得不好？', s:'开放式问题不预设答案；少问"是不是"，多问"怎么 / 什么"。', cat:'倾听回应'},
+  {q:'对方说得很笼统，怎么澄清？', a:'您刚才说的"没人管"，是指联系不上子女，还是觉得没人关心？',
+   w:'笼统点头假装听懂。', s:'澄清模糊表述，别用假设填坑，错了很伤信任。', cat:'倾听回应'},
+  {q:'怎么肯定对方，又不显得客套？', a:'您一个人带两个孩子还把家收拾得这么好，真不容易。',
+   w:'只盯着问题看。', s:'肯定式沟通找优势，对缺自信的群体尤其管用。', cat:'倾听回应'},
+  {q:'对方为自己的反应觉得"丢人"，怎么说？', a:'刚经历这种事，换谁都会慌一阵，这很正常，不是您脆弱。',
+   w:'您这样想不对 / 您要坚强。', s:'正常化降低羞耻，羞耻是开口的最大阻碍。', cat:'倾听回应'},
+  {q:'对方翻来覆去说同一件事，怎么办？', a:'您刚才说的这点特别重要，我专门记下来了。',
+   w:'打断"您说过了"。', s:'对方反复说，往往那点没被真正接住；耐心是结构化的。', cat:'倾听回应'},
+  {q:'对方长时间不说话，我该干嘛？', a:'不急，您慢慢想，我先喝口水。（安静陪伴）',
+   w:'你怎么不说话？', s:'沉默是思考不是冷场；你一补话，真话就溜了。', cat:'沉默尴尬'},
+  {q:'对方答句越来越短，是不是聊过头了？', a:'今天先到这儿，不打扰您了，您啥时候想聊了发我就行。',
+   w:'再聊两句嘛 / 下周几我再来？', s:'答句变短＝身体想抽离；见好就收，保住第二次。', cat:'沉默尴尬'},
+  {q:'对方透露轻生念头，第一句怎么接？', a:'我听到您这么说，很担心您。您现在是一个人吗？身边有人陪着吗？',
+   w:'别瞎想 / 您这样不对 / 您要对得起家人。', s:'平静确认安全、不评判；涉自伤风险须打破保密，联系家属/报警/送医。', cat:'情绪危机'},
+  {q:'对方说在家被打了，怎么回应？', a:'这不是您的错。您现在安全吗？动手的时候孩子在场吗？',
+   w:'为了孩子忍忍吧 / 你们好好谈。', s:'不劝和、不归因受害者；安全计划优先；涉人身安全须上报。', cat:'情绪危机'},
+  {q:'对方有伤人 / 报复念头，怎么办？', a:'我有点担心会出事，咱们先想想怎么让您先稳下来，我陪您。',
+   w:'当耳边风 / 激将。', s:'先稳情绪保安全，再评估风险，必要时联动专业力量。', cat:'情绪危机'},
+  {q:'对方透露有自伤行为（划手臂 / 吞药等）？', a:'我知道那会儿太难受才那样，现在先让我陪您一会儿，咱们慢慢来。',
+   w:'您别做傻事 / 您太任性了。', s:'不否定行为，先陪伴降风险；这是危机信号，须按红线处理。', cat:'情绪危机'},
+  {q:'对方突然暴怒、拍桌子？', a:'我看您是真的气坏了，今天您想骂就骂，我在听，不拦您。',
+   w:'跟他对着吼 / 马上讲道理。', s:'先接住怒气，等情绪落下来再谈；安全前提下让情绪有出口。', cat:'情绪危机'},
+  {q:'什么时候、怎么交代保密边界？', a:'今天聊的我不会往外传，除非有伤自己、伤别人、或被虐待这几种，那种我得上，先跟您说清。',
+   w:'等对方问了再含糊说"放心"。', s:'边界提前讲清反而更可信；含糊其辞才会被当成骗子。', cat:'边界保密'},
+  {q:'对方问"你会不会告诉别人"？', a:'一般的事我绝不外传；只有三种情况我得上：您要伤自己、伤别人、或孩子受虐待。',
+   w:'您放心，不会的。（其实是会的）', s:'诚实说例外，比骗了再上报少一万倍信任损伤。', cat:'边界保密'},
+  {q:'对方抗拒签字、填表，怎么处理？', a:'今天不填表，咱们先聊聊，等您愿意了再弄，不急。',
+   w:'这是规定，必须填。', s:'高防御先建关系再文书；把纸笔推到前面＝把人推走。', cat:'边界保密'},
+  {q:'对方顾虑被录音、拍照？', a:'我不会录音，也不拍照，就咱们俩聊，您放心。',
+   w:'偷偷记录。', s:'明确承诺不记录，对防御型是卸包袱；说到要做到。', cat:'边界保密'},
+  {q:'怎么跟困境儿童 / 留守儿童开口？', a:'你帮奶奶做家务，真是个懂事的孩子。（先聊兴趣、学校，不聊爸妈）',
+   w:'你爸妈为什么不在家？', s:'肯定式沟通，不贴标签，尊重孩子的自决，不强迫说。', cat:'特殊人群'},
+  {q:'跟老年服务对象怎么聊才顺？', a:'您慢慢说，我不急，说不清楚咱多说两遍，我记着呢。',
+   w:'语速快、催着答。', s:'语速放慢、重复确认、给足反应时间，关注情感需求。', cat:'特殊人群'},
+  {q:'面对精神障碍的服务对象，注意什么？', a:'咱们今天不聊"病"，就聊聊您这两天吃了啥、睡得好不好。',
+   w:'您是不是又幻觉了 / 您得按时吃药。', s:'简化语言、不辩论症状、去标签；先建立人跟人的关系。', cat:'特殊人群'},
+  {q:'跟社区矫正 / 戒毒人员怎么开口不冒犯？', a:'今天不是来"盯"您，是看看有啥能帮上您的。',
+   w:'您得好好表现 / 别再犯。', s:'去标签、正常化、找改变动机，比说教有用。', cat:'特殊人群'},
+  {q:'低保核查入户，怎么不让人觉得被审？', a:'今天来是核实一下情况，材料齐不齐都行，咱慢慢对，不着急。',
+   w:'您家收入到底多少？', s:'维护尊严、不审视；核查也能有温度。', cat:'特殊人群'},
+  {q:'面对残障服务对象，怎么开口？', a:'您用这个姿势坐着舒服吗？需要我帮您调一下吗？',
+   w:'替对方直接做决定。', s:'先问偏好、尊重自决；残障不是"可怜"，是差异。', cat:'特殊人群'},
+  {q:'家里矛盾多，怎么切入？', a:'家里的事各有各的难处，您先说您最愁的那一件。',
+   w:'挨个问每个人怎么想。', s:'先聚焦最痛的点，别一次性摊开全家，会炸。', cat:'特殊人群'},
+  {q:'对方明显不信任机构 / 政府，怎么接？', a:'您之前可能遇到过不痛快的事，我理解您防着点，正常。',
+   w:'您要相信我们。', s:'先承认不信任的合理性，再慢慢用行动攒信任。', cat:'特殊人群'},
+  {q:'临走怎么把"后门"留好？', a:'下次我来之前先给您发个微信，您啥时候想聊了回我一句就行。',
+   w:'下周几我再来？', s:'把主动权交回去，下次见面的质量完全不同。', cat:'收尾回访'},
+  {q:'回访时对方状态变好，怎么说？', a:'上次您说的事，这次看您精神好多了，真为您高兴。',
+   w:'只问"最近又怎么了"。', s:'看见并肯定改变，是关系最牢的黏合剂。', cat:'收尾回访'},
+  {q:'回访时对方冷淡、说"没啥事"？', a:'没事就好，那我不多打扰，您啥时候想聊随时找我。',
+   w:'硬聊、追问。', s:'冷淡可能只是忙或还防；留门比硬闯强。', cat:'收尾回访'},
+  {q:'对方需要心理咨询，怎么转介不甩锅？', a:'这事我陪您一起找个更专业的人聊聊，我帮您联系，行吗？',
+   w:'您这得看心理医生（打发走）。', s:'转介时陪伴、不甩锅；先征得同意再牵线。', cat:'转介资源'},
+  {q:'对方缺钱缺物，社工能帮忙吗？', a:'您说的情况，站里有个临时救助的政策，我帮您问问怎么申请。',
+   w:'这钱我给不了。', s:'给"路径"而非"给钱"；明确边界也能给希望。', cat:'转介资源'},
+  {q:'对方直接要低保 / 要钱，怎么回？', a:'钱的事我不能直接给，但我能帮您看有哪些政策渠道，咱一步步来。',
+   w:'这我办不了，别找我。', s:'诚实边界＋主动找替代资源，比一句"不行"更有用。', cat:'转介资源'}
+];
+/* 话术分类顺序（§13） */
+const PH_CATS = ['破冰开口','倾听回应','沉默尴尬','情绪危机','边界保密','特殊人群','收尾回访','转介资源'];
+/* GAP：§10 回访间隔（每种类型默认值）。新增类型沿用节奏倍率定档。 */
+const GAP = {
+  active:[3,5,'主动求助，进展快，间隔可短'],
+  passive:[5,7,'被动转介，先养信任'],
+  introvert:[5,7,'I 型，别隔天追，留消化空间'],
+  defense:[7,10,'高防御，宁慢勿快，保住第二次'],
+  cognitive:[7,14,'认知障碍，间隔拉长、重复确认'],
+  extrovert:[3,5,'外向健谈，趁热打铁']
+};
+const RATE = [
+  {k:'cold',n:'戒备',c:'几乎不回话、身体远离、只想结束',g:'这次目标降到"没被赶走+答应下次见"'},
+  {k:'loose',n:'松动',c:'开始回短句、眼神有接触',g:'下次继续当前节奏，别加码'},
+  {k:'warm',n:'愿意续',c:'主动说细节、问"你们还能做啥"',g:'可进入正式接案/评估'}
+];
+
+/* ============ §5 节奏倍率引擎：倍率驱动一切 ============ */
+function typeOf(id){ return TYPES.find(x=>x.id===id) || TYPES[0]; }
+function rhythmOf(id){ return typeOf(id).rhythm || 1; }
+/* 沉默等待秒数：默认基准 8s × 倍率（文档 §5） */
+function silenceWait(id){ return Math.round(8 * rhythmOf(id)); }
+/* 每轮提问数：外向(倍率<1)可 2 句，其余 1 句 */
+function qPerRound(id){ return rhythmOf(id) < 1 ? 2 : 1; }
+/* 是否当众记录：高防御 / 认知障碍 严禁当众记录 */
+function publicRecord(id){ return !['defense','cognitive'].includes(id); }
+/* 是否先承诺时长：慢节奏类型先给时间边界更稳 */
+function promiseDuration(id){ return rhythmOf(id) >= 1.5; }
+/* 非语言提示：§8 简化派生（社交距离 / 目光比例 / 语速） */
+function nonVerbal(id){
+  const t=typeOf(id);
+  const gaze = t.ei==='I' ? '低（偶尔对视即可）' : t.ei==='E' ? '中高' : '中';
+  return `社交距离保持一臂以上；目光接触占比 ${gaze}；语速放慢约 ×${rhythmOf(id)}。`;
+}
+
+/* ============ §15 核心交叉表：场景 × 类型 → 该显示的卡片 ============
+   按 card.types 过滤，必做(must)全留、推荐(rec)尽量留、可选(opt)补齐到 6–7 张，避免信息过载。 */
+function visibleCards(scene, type){
+  const order = {must:0, rec:1, opt:2};
+  let list = CARDS.filter(c => c.types.includes('*') || c.types.includes(type));
+  list.sort((a,b)=> order[a.priority]-order[b.priority]);
+  const must = list.filter(c=>c.priority==='must');
+  const rec  = list.filter(c=>c.priority==='rec');
+  const opt  = list.filter(c=>c.priority==='opt');
+  let out = must.concat(rec);
+  for(const o of opt){ if(out.length>=7) break; out.push(o); }
+  return out;
+}
+
+/* ============ 持久化层 ============ */
+const LS = {
+  get(k,def){ try{ const v=localStorage.getItem(k); return v===null?def:JSON.parse(v); }catch(e){ return def; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+const SET = Object.assign({dark:false, vib:true, snd:true, reduce:false, fs:1, anon:false}, LS.get('ice_settings',{}));
+const S = Object.assign({step:0, scene:'home', type:'introvert', tone:'t',
+  name:'', unit:'社区社工站', me:'张', gap:7, gapd:'', rate:'loose', memo:'', date:''},
+  LS.get('ice_flow',{}));
+let CASES = LS.get('ice_cases', []);          // 案主档案
+let FAV = LS.get('ice_fav', []);              // 收藏的标识
+let CUSTOM = LS.get('ice_custom', []);        // 自定义话术
+
+function saveSettings(){ LS.set('ice_settings',SET); }
+function saveFlow(){ LS.set('ice_flow',S); }
+function saveCases(){ LS.set('ice_cases',CASES); }
+function saveFav(){ LS.set('ice_fav',FAV); }
+function saveCustom(){ LS.set('ice_custom',CUSTOM); }
+
+/* ============ 主题 & 无障碍 ============ */
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', SET.dark?'dark':'light');
+  document.documentElement.style.setProperty('--fs', SET.fs);
+  document.documentElement.classList.toggle('reduce', !!SET.reduce);
+  document.querySelector('meta[name=theme-color]')
+    .setAttribute('content', SET.dark?'#0e1514':'#1f7a6d');
+  syncSwitches();
+}
+function syncSwitches(){
+  setSw('#swDark', SET.dark); setSw('#swVib', SET.vib);
+  setSw('#swSnd', SET.snd); setSw('#swReduce', SET.reduce); setSw('#swAnon', SET.anon);
+  const f=SET.fs; $('#fsVal').textContent = f<=0.9?'小':f>=1.3?'特大':f>=1.15?'大':f<=1?'标准':'中';
+  $('#fsSlider').value=f;
+}
+function setSw(sel,on){ const el=$(sel); el.classList.toggle('on',!!on); el.setAttribute('aria-checked',!!on); }
+
+/* ============ 工具 ============ */
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1700)}
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function fill(t){return t.replace(/\{name\}/g,S.name||'X先生/女士').replace(/\{unit\}/g,S.unit||'社工站').replace(/\{me\}/g,S.me||'社工').replace(/\{who\}/g,'社区')}
+function copyText(t){
+  const done=()=>toast('已复制，可直接粘贴');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done).catch(()=>fallback(t));
+  }else fallback(t);
+  function fallback(x){
+    const ta=document.createElement('textarea');ta.value=x;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done()}catch(e){toast('请手动复制')}
+    document.body.removeChild(ta);
+  }
+}
+function animateView(){ const v=$('#view'); v.classList.remove('v-in'); void v.offsetWidth; v.classList.add('v-in'); }
+
+/* ============ 提示音 & 震动 ============ */
+let _actx=null;
+function beep(freq=660,dur=.12,vol=.18){
+  if(!SET.snd) return;
+  try{
+    _actx = _actx || new (window.AudioContext||window.webkitAudioContext)();
+    if(_actx.state==='suspended') _actx.resume();
+    const o=_actx.createOscillator(), g=_actx.createGain();
+    o.type='sine'; o.frequency.value=freq; g.gain.value=vol;
+    o.connect(g); g.connect(_actx.destination);
+    const t=_actx.currentTime; o.start(t);
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.stop(t+dur+.02);
+  }catch(e){}
+}
+function vibrate(pat){ if(SET.vib && navigator.vibrate){ try{ navigator.vibrate(pat); }catch(e){} } }
+
+/* ============ 步骤条 & 页头 ============ */
+let PAGE='flow';
+const STEPN=['场景','案主','开场白','现场','评分','留后门'];
+function stepper(){
+  const el=$('#stepper');
+  if(PAGE!=='flow'){ el.classList.add('dim'); el.innerHTML=''; return; }
+  el.classList.remove('dim');
+  el.innerHTML=STEPN.map((n,i)=>`<div class="step ${i===S.step?'on':i<S.step?'done':''}">
+    <div class="n">${i<S.step?'✓':i+1}</div><div class="t">${n}</div></div>`).join('');
+}
+function headerTag(){
+  const t=TYPES.find(x=>x.id===S.type);
+  $('#hdrTag').textContent=(t.slow?'I 型慢节奏':'标准节奏')+' · '+SCENES.find(x=>x.id===S.scene).n;
+}
+function render(){
+  if(tm){ clearInterval(tm); tm=null; }   // 切换视图时停止计时，避免操作已移除节点
+  stepper(); headerTag();
+  const v=$('#view');
+  if(PAGE==='flow'){
+    if(S.step===0) v.innerHTML=step0();
+    else if(S.step===1) v.innerHTML=step1();
+    else if(S.step===2) v.innerHTML=step2();
+    else if(S.step===3) v.innerHTML=step3();
+    else if(S.step===4) v.innerHTML=step4();
+    else v.innerHTML=step5();
+  } else if(PAGE==='phrases') v.innerHTML=phrasesViewHTML();
+  else if(PAGE==='cases') v.innerHTML=casesViewHTML();
+  else if(PAGE==='install') v.innerHTML=installViewHTML();
+  bindCommon();
+  $$('footer button').forEach(b=>b.classList.toggle('on', b.dataset.page===PAGE));
+  animateView();
+}
+
+/* ============ 流程各步 ============ */
+function step0(){
+  return `<div class="card">
+    <h2>① 先选场景</h2>
+    <p class="sub">不同场景，开口第一句完全不同。</p>
+    <div class="row">${SCENES.map(s=>`<button class="chip ${s.id===S.scene?'sel':''}" data-c="scene" data-v="${s.id}" aria-pressed="${s.id===S.scene}">${s.n}<small>${s.t}</small></button>`).join('')}</div>
+    <div class="note" id="scTip"></div>
+    <div class="field" style="margin-top:14px">
+      <label for="me">接案社工（姓氏，填进开场白）</label>
+      <input type="text" id="me" value="${esc(S.me)}" placeholder="例如：张" maxlength="4">
+    </div>
+    <div class="field">
+      <label for="unit">所属单位（站/中心名）</label>
+      <input type="text" id="unit" value="${esc(S.unit)}" placeholder="例如：XX社区社工站">
+    </div>
+    <div class="field">
+      <label for="name">案主称呼（可空，留空用"X先生/女士"）</label>
+      <input type="text" id="name" value="${esc(S.name)}" placeholder="例如：李阿姨" maxlength="12">
+    </div>
+  </div>`+nextBtn('下一步：判断案主类型');
+}
+function step1(){
+  const t=TYPES.find(x=>x.id===S.type);
+  return `<div class="card">
+    <h2>② 案主是什么类型？</h2>
+    <p class="sub">系统按「场景 × 类型」自动筛出该显示的破冰卡片（§15 交叉表），慢节奏类型自动换用更高节奏倍率。</p>
+    <div class="row">${TYPES.map(x=>`<button class="chip ${x.id===S.type?'sel':''}" data-c="type" data-v="${x.id}" aria-pressed="${x.id===S.type}">${x.n}<small>${x.t}</small></button>`).join('')}</div>
+    <div class="note" id="tyTip"></div>
+    <h2 style="margin-top:18px">③ 开口基调</h2>
+    <p class="sub">决定三句话里"先说哪句"。</p>
+    <div class="row">${TONE.map(x=>`<button class="chip ${x.id===S.tone?'sel':''}" data-c="tone" data-v="${x.id}" aria-pressed="${x.id===S.tone}">${x.n}<small>${x.s}</small></button>`).join('')}</div>
+  </div>`+navBtns();
+}
+function step2(){
+  const o=OPEN[S.scene]; let a=fill(o.a),b=fill(o.b),c=fill(o.c);
+  const nos=NO[S.scene].map(x=>`<div class="script no"><span class="who">❌ 别说这句</span><br>${esc(x)}</div>`).join('');
+  return `<div class="card">
+    <h2>④ 三句话开场白</h2>
+    <p class="sub">前 30 秒基本决定信任。别自由发挥，按这个顺序说。</p>
+    <div class="script"><span class="who">1 · 亮身份 + 去权力感</span><br>${esc(a)}</div>
+    <div class="script"><span class="who">2 · 说保密 + 说例外</span><br>${esc(b)}</div>
+    <div class="script"><span class="who">3 · 开放式邀请，不抛问题</span><br>${esc(c)}</div>
+    <button class="copy" id="copyOpen" aria-label="复制三段开场白">📋 复制三段开场白</button>
+    <div class="note"><b>为什么顺序不能乱：</b>先说"我不是来查你"再谈边界，最后才给开口的空间。先把第 2 句放在第 1 句，案主会听成"这人要记我黑材料"。</div>
+    <h2 style="margin-top:18px">对比：这几句会把人吓退</h2>
+    ${nos}
+  </div>`+navBtns();
+}
+function step3(){
+  const t=typeOf(S.type);
+  const cards=visibleCards(S.scene, S.type);
+  const wait=silenceWait(t.id), speak=wait+7;
+  const list=cards.map(c=>`
+    <div class="bphrase">
+      <div class="q"><span class="dot"></span>${c.t}
+        <span class="tag" style="margin-left:6px">${PRI[c.priority]}</span>
+        <small style="color:var(--gray);font-weight:400;margin-left:6px">${c.card_id}</small></div>
+      <div>${esc(c.trigger)}</div>
+      <div class="a">💬 ${esc(c.say)}</div>
+      ${c.avoid_say?`<div class="w">❌ ${esc(c.avoid_say)}</div>`:''}
+      <div style="font-size:.75rem;color:var(--gray);margin-top:5px">🧠 ${esc(c.why)}</div>
+    </div>`).join('');
+  return `<div class="card">
+    <h2>⑤ 现场破冰卡片</h2>
+    <p class="sub">§15 交叉表已按「场景 × 类型」筛出 ${cards.length} 张执行卡片（必做优先，不信息过载）。</p>
+    <div class="note">🎚 节奏倍率 <b>×${t.rhythm}</b> → 建议沉默等待 <b>${wait}s</b>、每轮 <b>${qPerRound(t.id)} 句</b>${publicRecord(t.id)?'':'、<b>当众不记录</b>'}${promiseDuration(t.id)?'、<b>先承诺时长</b>':''}。<br>🧍 非语言：${nonVerbal(t.id)}</div>
+    ${list}
+  </div>
+  <div class="card">
+    <h2>⏱ 沉默计时</h2>
+    <p class="sub">对方停了就点开始。环形进度随等待变色：到 ${wait}s 变橙（可轻接）、到 ${speak}s 变红（该你开口），到节点震动/响铃。</p>
+    <div class="timer">
+      <div class="ring">
+        <svg width="170" height="170" viewBox="0 0 170 170" aria-hidden="true">
+          <circle class="track" cx="85" cy="85" r="74"></circle>
+          <circle class="prog" id="tprog" cx="85" cy="85" r="74"
+            stroke-dasharray="464.96" stroke-dashoffset="464.96"></circle>
+        </svg>
+        <div class="center">
+          <div class="big" id="tt">0:00</div>
+          <div class="lbl" id="tl">还没开始</div>
+        </div>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button class="btn" id="tstart">开始</button>
+      <button class="btn ghost" id="tstop" disabled>停</button>
+      <button class="btn ghost" id="treset">重置</button>
+    </div>
+    <div class="hint" id="thint">点「开始」后，我会按当前类型的节奏倍率告诉你什么时候该说话、什么时候继续等。开启震动/提示音可在设置里调整。</div>
+  </div>`+navBtns();
+}
+function step4(){
+  return `<div class="card">
+    <h2>⑥ 破冰到哪一级了？</h2>
+    <p class="sub">不是"聊得好不好"，是"他愿不愿意见你第二次"。</p>
+    <div class="scale">${RATE.map(r=>`<button class="lvl ${r.k===S.rate?'sel':''}" data-r="${r.k}" aria-pressed="${r.k===S.rate}">${r.n}<br><small style="font-size:11px;font-weight:400">${r.c}</small></button>`).join('')}</div>
+    <div class="note" id="rTip"></div>
+    <div class="field" style="margin-top:14px">
+      <label for="memo">对方提到的兴趣 / 抗拒点（下次锚点）</label>
+      <textarea id="memo" placeholder="例如：喜欢养多肉、怕孩子被带走、不想让邻居知道">${esc(S.memo)}</textarea>
+    </div>
+    <div class="note" style="margin-top:12px"><b>成功 / 失败信号（自查 · §11）</b><br>
+      ✅ 成功：对方主动多说、开始问"你们还能做啥"、约下次、身体转向你。<br>
+      ⚠️ 失败：答句变短、身体转向门、重复"没什么"、频繁看手机/钟。<br>
+      <b>补救动作（§12）</b>：失败时别加码，回到"容错与观察"（看现场卡片），或见好就收、改天再来——聊过头一次，就没有第二次。</div>
+  </div>`+navBtns();
+}
+function step5(){
+  const g=GAP[S.type];
+  return `<div class="card">
+    <h2>⑦ 留后门 + 定回访</h2>
+    <p class="sub">一句收尾话，把主动权还给对方。</p>
+    <div class="script"><span class="who">💬 临走说这句</span><br>今天先到这儿，不打扰您了。下次我来之前先给您发个微信，您啥时候想聊了回我一句就行。</div>
+    <div class="field">
+      <label for="gap">建议回访间隔：<b style="color:var(--green)">${g[0]}–${g[1]} 天</b>（${g[2]}）</label>
+      <input type="number" id="gap" value="${S.gap}" min="1" max="60"> <span style="font-size:.78rem;color:var(--gray)">天</span>
+    </div>
+    <div class="field">
+      <label for="date">下次计划日期</label>
+      <input type="date" id="date" value="${S.date}">
+    </div>
+    <div class="field">
+      <label for="repeat">提醒重复</label>
+      <select id="repeat" aria-label="提醒重复">
+        <option value="none">不重复（单次提醒）</option>
+        <option value="weekly">每周重复</option>
+        <option value="biweekly">每两周重复</option>
+        <option value="monthly">每月重复</option>
+      </select>
+    </div>
+    <div class="btnrow">
+      <button class="btn orange" id="addCal">📅 存到手机日历</button>
+      <button class="btn" id="fin">完成并建档</button>
+    </div>
+    <div class="summary" id="sum"></div>
+  </div>`+navBtns();
+}
+function nextBtn(t){return `<div class="btnrow"><button class="btn" id="nxt">${t} →</button></div>`}
+function navBtns(){return `<div class="btnrow"><button class="btn ghost" id="prv">← 上一步</button><button class="btn" id="nxt">下一步 →</button></div>`}
+
+/* ============ 流程交互绑定 ============ */
+function bindCommon(){
+  if(PAGE!=='flow') return;
+  $$('[data-c]').forEach(b=>b.onclick=()=>{
+    store(b.dataset.c, b.dataset.v); render();
+    if(b.dataset.c==='scene')toast('场景已选：'+SCENES.find(s=>s.id===S.scene).n);
+    if(b.dataset.c==='type')toast('已切到'+(TYPES.find(x=>x.id===S.type).slow?'慢节奏模式':'标准节奏'));
+  });
+  const me=$('#me'),unit=$('#unit'),name=$('#name');
+  if(me)me.oninput=e=>{S.me=e.target.value;saveFlow()};
+  if(unit)unit.oninput=e=>{S.unit=e.target.value;saveFlow()};
+  if(name)name.oninput=e=>{S.name=e.target.value;saveFlow()};
+  const nxt=$('#nxt'),prv=$('#prv');
+  if(nxt)nxt.onclick=()=>{if(S.step<5){S.step++;saveFlow();render()}};
+  if(prv)prv.onclick=()=>{if(S.step>0){S.step--;saveFlow();render()}};
+  const co=$('#copyOpen'); if(co)co.onclick=()=>{
+    const o=OPEN[S.scene];
+    copyText(`开场白（${SCENES.find(s=>s.id===S.scene).n}）\n1 ${fill(o.a)}\n2 ${fill(o.b)}\n3 ${fill(o.c)}`);
+  };
+  const st=$('#scTip'); if(st){const s=SCENES.find(x=>x.id===S.scene);st.innerHTML=`<b>现场提示：</b>${s.tip}`}
+  const tt=$('#tyTip'); if(tt){const t=typeOf(S.type);
+    tt.innerHTML=`<b>${t.n}（节奏倍率 ×${t.rhythm}）：</b>${t.slow?'已关闭连续追问、延长等待。':'标准节奏。'} `+
+      `建议沉默等待 <b>${silenceWait(t.id)} 秒</b>、每轮只问 <b>${qPerRound(t.id)} 句</b>`+
+      `${publicRecord(t.id)?'':'、<b>避免当众记录</b>'}${promiseDuration(t.id)?'、<b>先承诺时长</b>':''}。`+
+      `目标是"没被赶走 + 答应见第二次"就算成功。`}
+  const rt=$('#rTip'); if(rt){const r=RATE.find(x=>x.k===S.rate);
+    rt.innerHTML=`<b>这一级的意思是：</b>${r.g}`}
+  $$('[data-r]').forEach(b=>b.onclick=()=>{S.rate=b.dataset.r;render()});
+  const memo=$('#memo'); if(memo)memo.oninput=e=>S.memo=e.target.value;
+  const gap=$('#gap'); if(gap)gap.oninput=e=>S.gap=+e.target.value||7;
+  const date=$('#date'); if(date)date.oninput=e=>S.date=e.target.value;
+  const ac=$('#addCal'); if(ac)ac.onclick=addToCalendar;
+  const fin=$('#fin'); if(fin)fin.onclick=finish;
+  timerBind(); summary();
+}
+function store(k,v){ S[k]=v; saveFlow(); }
+function summary(){
+  const s=$('#sum'); if(!s)return;
+  const r=RATE.find(x=>x.k===S.rate);
+  const g=GAP[S.type];
+  s.innerHTML=`<div class="line"><b>场景</b> ${SCENES.find(x=>x.id===S.scene).n} · ${TYPES.find(x=>x.id===S.type).n}</div>
+    <div class="line"><b>节奏</b> ${TYPES.find(x=>x.id===S.type).slow?'I 型慢节奏':'标准'}</div>
+    <div class="line"><b>等级</b> ${r.n} — ${r.c}</div>
+    <div class="line"><b>下次间隔</b> ${g[0]}–${g[1]} 天（已填 ${S.gap} 天）</div>
+    ${S.memo?`<div class="line"><b>锚点</b> ${esc(S.memo)}</div>`:''}
+    <div class="line" style="margin-top:8px;color:var(--green);font-size:.75rem">完成后将自动存入「档案」，可随时回顾与追踪回访。</div>`;
+}
+
+/* ============ 沉默计时器（环形 + 震动 + 提示音） ============ */
+let tm=null,ts=0,paused=false,_lastBeep=0;
+const RING_C=2*Math.PI*74;
+function timerBind(){
+  const st=$('#tstart'),sp=$('#tstop'),rs=$('#treset'),tt=$('#tt'),tl=$('#tl'),th=$('#thint'),pr=$('#tprog');
+  if(!st)return;
+  // §5 节奏倍率驱动计时阈值：基准 8s × 倍率 = 建议沉默等待(wait)，再 +7s = 该开口(speak)
+  const wait=silenceWait(S.type), speak=wait+7, win=speak+3;
+  const setRing=(frac,color)=>{
+    pr.style.strokeDashoffset = RING_C*(1-Math.min(1,frac));
+    pr.style.stroke = color;
+  };
+  const tick=()=>{
+    if(!tt||!tl){ clearInterval(tm); tm=null; return; }
+    const s=Math.floor((Date.now()-ts)/1000);
+    const m=Math.floor(s/60),ss=s%60;
+    tt.textContent=`${m}:${String(ss).padStart(2,'0')}`;
+    tt.className='big';
+    let h='',color='var(--green)';
+    if(s<wait){h='刚停，别急。再等一会儿。';color='var(--green)';}
+    else if(s<speak){h='👍 很好，这段安静是安全的。可轻轻接一句："不急，您慢慢想。"';color='var(--orange)';}
+    else {h='⚠️ 已超过建议等待，该你说话了。说个观察句或环境句，别追问。';color='var(--red)';}
+    if(s>=speak) tt.classList.add('hot');
+    else if(s>=wait) tt.classList.add('warn');
+    setRing(s/win, color);
+    tl.textContent=s<wait?'刚刚开始':(s+' 秒，沉默中（建议 '+wait+'s）');
+    th.innerHTML=h;
+    if(s===wait && _lastBeep!==wait){ _lastBeep=wait; beep(720,.12); vibrate(60); toast('已等待 '+wait+' 秒，可轻接一句'); }
+    if(s===speak && _lastBeep!==speak){ _lastBeep=speak; beep(880,.18); vibrate([90,60,90]); toast('已 '+speak+' 秒，该你开口了'); }
+  };
+  st.onclick=()=>{
+    ensureAudio();
+    if(tm){ts=Date.now()-(paused?Date.now()-ts:ts);paused=false}
+    else{ts=Date.now();tm=setInterval(tick,200);}
+    st.textContent='计时中…';st.disabled=true;sp.disabled=false;
+  };
+  sp.onclick=()=>{paused=true;clearInterval(tm);tm=null;st.textContent='继续';st.disabled=false;beep(440,.08)};
+  rs.onclick=()=>{clearInterval(tm);tm=null;paused=false;ts=0;_lastBeep=0;
+    tt.textContent='0:00';tt.className='big';setRing(0,'var(--green)');
+    tl.textContent='已重置';th.innerHTML='点「开始」重新计时。';st.textContent='开始';st.disabled=false};
+  setRing(0,'var(--green)');
+}
+function ensureAudio(){ if(SET.snd){ try{ _actx=_actx||new (window.AudioContext||window.webkitAudioContext)(); if(_actx.state==='suspended')_actx.resume(); }catch(e){} } }
+
+/* ============ 日历导出（含重复 & 提醒） ============ */
+function buildICS(opts){
+  // opts: {date, gap, repeat, name, type, memo}
+  let d=opts.date;
+  if(!d){ const n=new Date(); n.setDate(n.getDate()+(opts.gap||7)); d=n.toISOString().slice(0,10); }
+  const pad=n=>String(n).padStart(2,'0');
+  const toDT=(dd,hh,mm)=>{ const x=new Date(dd+'T00:00:00'); x.setHours(hh,mm,0,0);
+    return `${x.getFullYear()}${pad(x.getMonth()+1)}${pad(x.getDate())}T${pad(x.getHours())}${pad(x.getMinutes())}00`; };
+  const rrule = {none:'', weekly:'RRULE:FREQ=WEEKLY;COUNT=12\r\n',
+    biweekly:'RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=12\r\n',
+    monthly:'RRULE:FREQ=MONTHLY;COUNT=12\r\n'}[opts.repeat||'none']||'';
+  const desc=`接案回访。节奏：${(TYPES.find(x=>x.id===opts.type)||{}).slow?'I型慢热，别追问':'标准'}。锚点：${(opts.memo||'').replace(/[\r\n]/g,' ')}`;
+  return 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//社工破冰器//ZH\r\n'+
+    'BEGIN:VEVENT\r\nUID:'+Date.now()+'@icebreaker\r\n'+
+    'DTSTART;TZID=Asia/Shanghai:'+toDT(d,10,0)+'\r\n'+
+    'DTEND;TZID=Asia/Shanghai:'+toDT(d,10,30)+'\r\n'+
+    'SUMMARY:回访案主（破冰器提醒）'+(opts.name?' · '+opts.name:'')+'\r\n'+
+    'DESCRIPTION:'+desc+'\r\n'+ rrule +
+    'BEGIN:VALARM\r\nTRIGGER:-PT12H\r\nACTION:DISPLAY\r\nDESCRIPTION:明天回访案主'+(opts.name?'（'+opts.name+'）':'')+'，记得先发微信\r\nEND:VALARM\r\n'+
+    'END:VEVENT\r\nEND:VCALENDAR';
+}
+function downloadICS(ics, fname){
+  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=fname||'回访提醒.ics';
+  document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},300);
+}
+function addToCalendar(){
+  const repeat=($('#repeat')&&$('#repeat').value)||'none';
+  const ics=buildICS({date:S.date, gap:S.gap, repeat, name:S.name, type:S.type, memo:S.memo});
+  downloadICS(ics, '回访提醒'+(S.name?('_'+S.name):'')+'.ics');
+  toast('已生成日历文件，用"日历"打开即可导入'+(repeat!=='none'?'（含重复提醒）':''));
+}
+
+/* ============ 完成 -> 自动建档 ============ */
+function finish(){
+  S.memo=S.memo||($('#memo')&&$('#memo').value)||'';
+  S.gap=+S.gap||7; S.date=($('#date')&&$('#date').value)||S.date; S.rate=S.rate||'loose';
+  saveFlow();
+  const c={
+    id:'c'+Date.now(),
+    name:S.name||'（未记名）',
+    scene:S.scene, type:S.type, rate:S.rate, memo:S.memo,
+    date:S.date, createdAt:new Date().toISOString(),
+    followups:[]
+  };
+  // 默认首条回访
+  const plan = S.date || (()=>{ const n=new Date(); n.setDate(n.getDate()+S.gap); return n.toISOString().slice(0,10); })();
+  c.followups.push({date:plan, note:'计划首次回访', done:false});
+  CASES.unshift(c); saveCases();
+  toast('已建档 ✓ 可在「档案」里追踪回访');
+  // 重置流程，保留单位/社工信息
+  S.step=0; saveFlow(); render();
+  // 跳到档案页让用户看到
+  goPage('cases');
+}
+
+/* ============ 话术库（搜索 + 分类 + 收藏 + 自定义） ============ */
+function favKey(p,idx,custom){ return custom?('c'+p.id):('b'+idx); }
+function isFav(k){ return FAV.includes(k); }
+let pqCat='全部';
+function phrasesViewHTML(){
+  const cats=['全部'].concat(PH_CATS.filter(c=>PHRASES.some(p=>p.cat===c)));
+  const ref=`<div class="card ref">
+    <h2>📌 专业速查 · 红线</h2>
+    <p class="sub">一线可用、经得起复盘的话术原则（综合 OARS / 个案会谈三技巧 / 3F 倾听）。</p>
+    <div class="kv"><b>OARS 四件套</b>：开放式提问 · 肯定(Affirm) · 反映式倾听 · 摘要复述。</div>
+    <div class="kv"><b>会谈三技巧</b>：支持性(专注/倾听/同理) · 引导性(开放式/澄清/对焦/摘要) · 影响性(提供信息/建议/自我披露)。</div>
+    <div class="kv"><b>3F 倾听</b>：听事实(Fact) · 听感受(Feeling) · 听意图(Focus)。</div>
+    <div class="kv danger"><b>⚠ 保密例外（红线）</b>：当服务对象有自伤、伤人、或儿童/老人受虐待风险时，<b>必须打破保密</b>，立即联系家属、报警或送医，并报告机构。生命安全优先于隐私。</div>
+    <div class="kv danger"><b>⚠ 危机第一原则</b>：先稳情绪、保安全，不评判不否定（"别瞎想"是大忌），必要时陪伴并转介专业机构 / 全国心理援助热线 12356。</div>
+  </div>`;
+  const chips=`<div class="catrow" role="tablist" aria-label="话术分类">${cats.map(c=>`<button class="cchip ${c===pqCat?'sel':''}" data-cat="${c}" role="tab" aria-selected="${c===pqCat}">${c}</button>`).join('')}</div>`;
+  return ref + `<div class="card">
+    ${chips}
+    <input class="search" id="pq" placeholder="🔍 搜情景 / 关键词（输入 ☆ 看收藏）" aria-label="搜索话术">
+    <div id="plist"></div>
+    <div class="btnrow"><button class="btn ghost" id="addPhrase">➕ 添加我的话术</button></div>
+    <div class="note">💡 <b>用法：</b>每条都给了一句"能直接说"的、一句"千万别说"的。点 ☆ 收藏常用；点 ➕ 可把你的实战话术存进来。先练 OARS，再守红线。</div>
+  </div>`;
+}
+function renderPhrases(kw){
+  kw=(kw||'').trim();
+  const list=[];
+  PHRASES.forEach((p,i)=>{
+    if(pqCat!=='全部' && p.cat!==pqCat) return;
+    if(!kw || (p.q+p.a+p.w+p.s).includes(kw)) list.push({p,idx:i,custom:false});
+  });
+  if(pqCat==='全部'){
+    CUSTOM.forEach(p=>{ if(!kw || (p.q+p.a+(p.w||'')+(p.s||'')).includes(kw)) list.push({p,cust:p,custom:true}); });
+  }
+  const favOnly = kw==='☆'||kw==='收藏';
+  const shown = favOnly ? list.filter(x=>isFav(favKey(x.p,x.idx,x.custom))) : list;
+  const box=$('#plist'); if(!box) return;
+  if(!shown.length){ box.innerHTML='<div class="empty"><span class="big">🔍</span>没有匹配的话术，换个词或分类试试，或点「添加我的话术」。</div>'; return; }
+  box.innerHTML=shown.map(x=>{
+    const k=favKey(x.p,x.idx,x.custom);
+    const star=isFav(k)?'★':'☆';
+    const del = x.custom?`<button class="del" data-del="${x.p.id}" aria-label="删除">删</button>`:'';
+    const tag = (!x.custom && x.p.cat)?`<span class="tag">${esc(x.p.cat)}</span>`:'';
+    return `<div class="bphrase">
+      <div class="q"><span class="dot"></span>${esc(x.p.q)}${tag}
+        <button class="star ${isFav(k)?'on':''}" data-star="${k}" aria-label="收藏" aria-pressed="${isFav(k)}">${star}</button>
+        ${del}
+      </div>
+      <div class="a">💬 ${esc(x.p.a)}</div>
+      ${x.p.w?`<div class="w">❌ ${esc(x.p.w)}</div>`:''}
+      ${x.p.s?`<div style="font-size:.78rem;color:var(--gray);margin-top:5px">🧠 ${esc(x.p.s)}</div>`:''}
+      <button class="copy" data-cp="${esc(x.p.a)}">复制这句</button>
+    </div>`;
+  }).join('');
+  $$('[data-star]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.star; const i=FAV.indexOf(k);
+    if(i>=0){FAV.splice(i,1);toast('已取消收藏')} else {FAV.push(k);toast('已收藏 ★')}
+    saveFav(); renderPhrases($('#pq').value);
+  });
+  $$('[data-cp]').forEach(b=>b.onclick=()=>copyText(b.dataset.cp));
+  $$('[data-del]').forEach(b=>b.onclick=()=>{
+    if(!confirm('确定删除这条自定义话术？')) return;
+    CUSTOM=CUSTOM.filter(p=>p.id!==b.dataset.del); saveCustom(); toast('已删除'); renderPhrases($('#pq').value);
+  });
+}
+
+/* ============ 案主档案 / 历史 ============ */
+function casesViewHTML(){
+  if(!CASES.length){
+    return `<div class="empty"><span class="big">📁</span>还没有案主档案。<br>走完一次破冰流程并点「完成并建档」，记录就会出现在这里，可回顾并追踪回访进度。</div>`;
+  }
+  const cards=CASES.map(c=>{
+    const total=c.followups.length||1;
+    const done=c.followups.filter(f=>f.done).length;
+    const pct=Math.round(done/total*100);
+    const t=TYPES.find(x=>x.id===c.type);
+    const expanded = c._open;
+    const fus=c.followups.map((f,i)=>`
+      <div class="fu ${f.done?'done':''}">
+        <span class="fd">${esc(f.date||'—')}</span>
+        <span class="fn">${esc(f.note||'回访')}</span>
+        <button class="ck ${f.done?'on':''}" data-fu="${c.id}|${i}">${f.done?'已完成':'标记'}</button>
+      </div>`).join('');
+    return `<div class="case ${expanded?'open':''}" data-case="${c.id}">
+      <div class="ch" data-toggle="${c.id}">
+        <div>
+          <div class="nm">${esc(c.name)}</div>
+          <div class="meta">${SCENES.find(s=>s.id===c.scene).n} · ${t.n} · 建档 ${esc((c.createdAt||'').slice(0,10))}</div>
+        </div>
+        <span class="tag">${RATE.find(r=>r.k===c.rate).n}</span>
+        <span class="arr">▾</span>
+      </div>
+      <div class="prog" title="回访完成度 ${pct}%"><i style="width:${pct}%"></i></div>
+      <div class="acts">
+        <button class="mini" data-cal="${c.id}">📅 生成回访日历</button>
+        <button class="mini" data-addfu="${c.id}">＋ 添加回访</button>
+        <button class="mini danger" data-delcase="${c.id}">🗑️ 删除档案</button>
+      </div>
+      <div class="detail">
+        ${c.memo?`<div class="note" style="margin-top:0">🧠 锚点/抗拒点：${esc(c.memo)}</div>`:''}
+        <div style="font-size:.8rem;color:var(--gray);margin:8px 0 2px;font-weight:700">回访计划</div>
+        ${fus||'<div class="note">暂无回访计划</div>'}
+        <div class="field" style="margin-top:10px">
+          <input type="date" class="fuDate" data-for="${c.id}" value="">
+        </div>
+        <textarea class="fuNote" data-for="${c.id}" placeholder="这次回访要聊 / 已聊的内容" style="min-height:48px"></textarea>
+        <button class="mini ok full" data-savefu="${c.id}" style="margin-top:6px">保存这条回访</button>
+      </div>
+    </div>`;
+  }).join('');
+  const doneAll=CASES.filter(c=>c.followups.length&&c.followups.every(f=>f.done)).length;
+  return `<div class="card">
+    <h2>📁 案主档案 / 历史接案</h2>
+    <p class="sub">共 ${CASES.length} 份 · 全部回访完成 ${doneAll} 份。点开可追踪回访进度、生成日历。</p>
+  </div>${cards}`;
+}
+function bindCases(){
+  $$('[data-toggle]').forEach(b=>b.onclick=()=>{
+    const c=CASES.find(x=>x.id===b.dataset.toggle); if(!c)return;
+    c._open=!c._open; render();
+  });
+  $$('[data-fu]').forEach(b=>b.onclick=()=>{
+    const [cid,fi]=b.dataset.fu.split('|'); const c=CASES.find(x=>x.id===cid); if(!c)return;
+    c.followups[+fi].done=!c.followups[+fi].done; saveCases(); render();
+  });
+  $$('[data-delcase]').forEach(b=>b.onclick=()=>{
+    const c=CASES.find(x=>x.id===b.dataset.delcase);
+    if(!confirm('确定删除「'+(c?c.name:'')+'」的档案？此操作不可恢复。')) return;
+    CASES=CASES.filter(x=>x.id!==b.dataset.delcase); saveCases(); toast('已删除档案'); render();
+  });
+  $$('[data-cal]').forEach(b=>b.onclick=()=>{
+    const c=CASES.find(x=>x.id===b.dataset.cal); if(!c)return;
+    const ics=buildICS({date:c.date, gap:7, repeat:'none', name:c.name, type:c.type, memo:c.memo});
+    downloadICS(ics, '回访'+(c.name?('_'+c.name):'')+'.ics'); toast('已生成该档案的回访日历');
+  });
+  $$('[data-addfu]').forEach(b=>b.onclick=()=>{
+    const el=document.querySelector('.fuDate[data-for="'+b.dataset.addfu+'"]');
+    if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.focus(); toast('选好日期后填内容并保存'); }
+  });
+  $$('[data-savefu]').forEach(b=>b.onclick=()=>{
+    const cid=b.dataset.savefu; const c=CASES.find(x=>x.id===cid); if(!c)return;
+    const d=document.querySelector('.fuDate[data-for="'+cid+'"]').value;
+    const n=document.querySelector('.fuNote[data-for="'+cid+'"]').value;
+    if(!d){ toast('请先选回访日期'); return; }
+    c.followups.push({date:d, note:n||'回访', done:false}); saveCases(); toast('已添加回访'); render();
+  });
+}
+
+/* ============ 安装页 ============ */
+function installViewHTML(){
+  return `<div class="card">
+    <h2>装到手机 / 平板</h2>
+    <p class="sub">本工具是网页版，可直接"变成 App"，不用下载商店。</p>
+    <ol class="tips" style="padding-left:18px">
+      <li><b>iPhone / iPad（Safari）</b><br>点底部 <span class="kbd">分享</span> 图标 → 选「<b>添加到主屏幕</b>」→ 右上角「添加」。</li>
+      <li><b>安卓手机（Chrome）</b><br>点右上角 <span class="kbd">⋮</span> → 选「<b>安装应用</b>」或「添加到主屏幕」。</li>
+      <li><b>华为 / 部分国产浏览器</b><br>点菜单 → 通常叫「<b>添加至桌面</b>」，需先在系统设置里给浏览器"创建桌面快捷方式"权限。</li>
+      <li><b>平板 / 电脑</b><br>用 Chrome/Edge 打开，地址栏右侧点「<b>安装</b>」即可，全屏使用。</li>
+    </ol>
+    <div class="note"><b>用之前请注意：</b><br>· 全程可离线打开，上门没网也能用。<br>· 数据存在本机浏览器里，清缓存会丢；建议用右上角「设置 → 导出/备份」定期保存。<br>· 本工具是工作辅助，不是标准流程，具体按本单位接案规范与伦理守则执行。<br>· <b>伦理红线</b>：当服务对象有自伤、伤人、或儿童/老人受虐待风险时，<b>必须打破保密</b>、优先保护生命，立即联系家属/报警/送医并报告机构。<br>· 涉及案主隐私，别在共用设备上长期使用。</div>
+  </div>
+  <div class="card">
+    <h2>🌐 部署成可分享的网站</h2>
+    <p class="sub">本工具是<b>单文件网页</b>（HTML+CSS+JS 全在一起，零依赖、可离线）。把它放到任意静态空间，就是团队能直接访问的网站。</p>
+    <ol class="tips" style="padding-left:18px">
+      <li><b>方式一 · GitHub Pages（免费、适合公开/内网镜像）</b><br>把 <code>index.html</code> 推到仓库，仓库 Settings → Pages → 选分支根目录，几分钟后得到一个 <code>https://用户名.github.io/仓库名/</code> 链接。</li>
+      <li><b>方式二 · Netlify Drop / Vercel（拖拽即上线）</b><br>打开 app.netlify.com/drop 或 vercel.com，把 <code>index.html</code> 拖进去，立刻拿到网址，改完再拖一次即更新。</li>
+      <li><b>方式三 · 网盘 / 内网服务器 / 机构 OA</b><br>把文件上传到任意能访问的静态目录（Nginx、对象存储、单位内网）即可，无需后端。</li>
+    </ol>
+    <div class="note">📤 不会部署？也可以在「设置 → 分享 / 部署」里点<b>「下载单文件网页」</b>，把 <code>社工破冰器.html</code> 通过微信 / 邮件直接发给同事，对方双击即可用（同样离线、零依赖）。<br>🔗 想分享某个具体方案（场景/类型/语气）给同事？用「设置 → 复制分享链接」，对方打开即载入同一配置，且<b>不含姓名等隐私</b>。</div>
+  </div>`;
+}
+
+/* ============ 页脚 / 路由 ============ */
+function goPage(p){ PAGE=p; if(p==='flow'){} render(); }
+
+/* ============ 设置抽屉交互 ============ */
+function openDrawer(){ $('#drawer').classList.add('on'); $('#overlay').classList.add('on'); }
+function closeDrawer(){ $('#drawer').classList.remove('on'); $('#overlay').classList.remove('on'); }
+
+/* ============ 数据导出 / 导入 / 清空 ============ */
+function exportData(){
+  // 脱敏（SET.anon）：去掉姓名等可识别信息，仅保留方法论字段，用于外发/交接/归档合规
+  const cases = SET.anon ? CASES.map(c=>({
+    ...c, name:'案主(已脱敏)', memo:'（已脱敏）', privacy:'deidentified'
+  })) : CASES;
+  const payload={ app:'社工破冰器', ver:1, model:'IcebreakingCase',
+    exportedAt:new Date().toISOString(), anonymized:!!SET.anon,
+    settings:SET, flow:SET.anon?stripIdentifiable(S):S, cases, fav:FAV, custom:CUSTOM };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=(SET.anon?'破冰器脱敏归档_':'破冰器备份_')+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},300);
+  toast(SET.anon?'已导出脱敏版（去姓名，可外发）':'已导出完整备份，请妥善保存');
+}
+// §13/§2 隐私边界：脱敏流程里的可识别字段
+function stripIdentifiable(s){
+  const c=Object.assign({},s); delete c.name; return c;
+}
+/* ============ 分享 / 部署：把方案编码进 URL，做成可分享网站 ============ */
+function b64enc(obj){ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
+function b64dec(str){ try{ return JSON.parse(decodeURIComponent(escape(atob(str)))); }catch(e){ return null; } }
+/* 仅分享非隐私字段：场景/类型/语气/回访/等级/步骤，绝不带走姓名、单位、锚点 memo */
+const SHARE_FIELDS=['step','scene','type','tone','gap','gapd','rate'];
+function buildShareURL(){
+  const f={}; SHARE_FIELDS.forEach(k=>f[k]=S[k]);
+  const data={v:1, f, s:{dark:SET.dark, fs:SET.fs}};
+  return location.origin+location.pathname+'#f='+b64enc(data);
+}
+function copyShareLink(){
+  const url=buildShareURL();
+  const done=()=>{
+    if(location.protocol==='file:'){
+      toast('已复制链接（本地文件版）。部署到网站后，此链接他人才能打开，详见「装到手机」页。');
+    }else{
+      toast('已复制分享链接 ✓ 同事打开即载入同一方案');
+    }
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done, ()=>fallbackCopy(url, done));
+  }else fallbackCopy(url, done);
+}
+function fallbackCopy(text, cb){
+  const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta); if(cb)cb();
+}
+/* 下载当前页为单文件 HTML，可直接发送或托管到任意静态空间 */
+function downloadSite(){
+  const html='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='社工破冰器.html';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},300);
+  toast('已下载单文件网页 ✓ 可发送或托管');
+}
+/* 打开带 #f= 的链接时，还原分享的方案（不含隐私字段） */
+function applyShared(){
+  const m=location.hash.match(/#f=([^&]+)/);
+  if(!m) return false;
+  const d=b64dec(m[1]);
+  if(!d||!d.f) return false;
+  SHARE_FIELDS.forEach(k=>{ if(k in d.f) S[k]=d.f[k]; });
+  if(d.s){ Object.assign(SET, d.s); }
+  saveFlow(); saveSettings(); applyTheme();
+  toast('已载入同事分享的破冰方案 ✓');
+  return true;
+}
+/* 注入 Web Manifest，使网站可被"安装到桌面/主屏"（配合「装到手机」页） */
+function injectManifest(){
+  const svgRaw="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='96' fill='#1f9d6b'/><text x='50%' y='56%' font-size='300' text-anchor='middle' dominant-baseline='middle' fill='#ffffff' font-family='sans-serif'>冰</text></svg>";
+  const icon='data:image/svg+xml,'+encodeURIComponent(svgRaw);
+  const m={name:'社工破冰器',short_name:'破冰器',description:'一线社工破冰 / 接案现场辅助工具',
+    start_url:'.',display:'standalone',background_color:'#ffffff',theme_color:'#1f9d6b',
+    icons:[{src:icon,sizes:'512x512',type:'image/svg+xml',purpose:'any'}]};
+  const link=document.createElement('link');
+  link.rel='manifest';
+  link.href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify(m));
+  document.head.appendChild(link);
+}
+function importData(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(d.settings)Object.assign(SET,d.settings);
+      if(d.flow)Object.assign(S,d.flow);
+      if(Array.isArray(d.cases))CASES=d.cases;
+      if(Array.isArray(d.fav))FAV=d.fav;
+      if(Array.isArray(d.custom))CUSTOM=d.custom;
+      saveSettings(); saveFlow(); saveCases(); saveFav(); saveCustom();
+      applyTheme(); render(); closeDrawer();
+      toast('已从备份恢复 ✓');
+    }catch(e){ toast('文件无法识别，恢复失败'); }
+  };
+  r.readAsText(file);
+}
+function clearAll(){
+  if(!confirm('确定清空全部本地数据？\n包括案主档案、收藏、自定义话术与所有设置。\n建议先「导出/备份」。此操作不可恢复。')) return;
+  ['ice_settings','ice_flow','ice_cases','ice_fav','ice_custom'].forEach(k=>localStorage.removeItem(k));
+  CASES=[]; FAV=[]; CUSTOM=[];
+  Object.assign(SET,{dark:false,vib:true,snd:true,reduce:false,fs:1});
+  Object.assign(S,{step:0,scene:'home',type:'introvert',tone:'t',name:'',unit:'社区社工站',me:'张',gap:7,gapd:'',rate:'loose',memo:'',date:''});
+  applyTheme(); render(); closeDrawer();
+  toast('已全部清空');
+}
+
+/* ============ 全局事件 ============ */
+document.addEventListener('click',e=>{
+  const fb=e.target.closest('footer button');
+  if(fb){ goPage(fb.dataset.page); return; }
+  if(e.target.closest('#gear')){ openDrawer(); return; }
+  if(e.target.closest('#overlay')){ closeDrawer(); closePhraseModal(); return; }
+  if(e.target.closest('#drawerClose')){ closeDrawer(); return; }
+  if(e.target.closest('#btnExport')){ exportData(); return; }
+  if(e.target.closest('#btnImport')){ $('#fileInput').click(); return; }
+  if(e.target.closest('#btnClear')){ clearAll(); return; }
+  if(e.target.closest('#btnShare')){ copyShareLink(); return; }
+  if(e.target.closest('#btnDlSite')){ downloadSite(); return; }
+  if(e.target.closest('#addPhrase')){ openPhraseModal(); return; }
+  if(e.target.closest('#paCancel')){ closePhraseModal(); return; }
+  if(e.target.closest('#paSave')){ savePhrase(); return; }
+});
+// 开关
+$('#swDark').onclick=()=>{SET.dark=!SET.dark;saveSettings();applyTheme();};
+$('#swVib').onclick=()=>{SET.vib=!SET.vib;saveSettings();syncSwitches();if(SET.vib)vibrate(40);};
+$('#swSnd').onclick=()=>{SET.snd=!SET.snd;saveSettings();syncSwitches();if(SET.snd)beep(660,.12);};
+$('#swReduce').onclick=()=>{SET.reduce=!SET.reduce;saveSettings();applyTheme();};
+$('#swAnon').onclick=()=>{SET.anon=!SET.anon;saveSettings();syncSwitches();};
+$('#fsSlider').oninput=e=>{SET.fs=+e.target.value;saveSettings();applyTheme();};
+$('#fileInput').onchange=e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; };
+// 话术搜索
+document.addEventListener('input',e=>{ if(e.target&&e.target.id==='pq'){ renderPhrases(e.target.value); } });
+
+// 自定义话术弹窗
+function openPhraseModal(){ $('#phraseModal').classList.add('on'); $('#overlay').classList.add('on'); $('#pa_q').focus(); }
+function closePhraseModal(){ $('#phraseModal').classList.remove('on'); if(!$('#drawer').classList.contains('on'))$('#overlay').classList.remove('on'); }
+function savePhrase(){
+  const q=$('#pa_q').value.trim(), a=$('#pa_a').value.trim();
+  if(!q||!a){ toast('请至少填写情景与话术'); return; }
+  CUSTOM.push({id:'p'+Date.now(), q, a, w:$('#pa_w').value.trim(), s:$('#pa_s').value.trim()});
+  saveCustom();
+  $('#pa_q').value=$('#pa_a').value=$('#pa_w').value=$('#pa_s').value='';
+  closePhraseModal(); toast('已添加我的话术 ✓');
+  if(PAGE==='phrases') renderPhrases($('#pq').value);
+}
+
+// 页脚切换后在 phrases 页需绑定搜索/收藏
+const _origRender = render;
+function renderWithBind(){
+  _origRender();
+  if(PAGE==='phrases'){ renderPhrases($('#pq')?$('#pq').value:''); bindPhrasesBtns(); }
+  if(PAGE==='cases'){ bindCases(); }
+}
+function bindPhrasesBtns(){
+  const ap=$('#addPhrase'); if(ap)ap.onclick=openPhraseModal;
+  $$('.cchip').forEach(b=>b.onclick=()=>{
+    pqCat=b.dataset.cat;
+    $$('.cchip').forEach(x=>{ const on=x.dataset.cat===pqCat; x.classList.toggle('sel',on); x.setAttribute('aria-selected',on); });
+    renderPhrases($('#pq')?$('#pq').value:'');
+  });
+}
+// 覆写 render 调用
+render = renderWithBind;
+
+/* ============ 启动 ============ */
+$('#app').classList.add('show');
+injectManifest();
+applyShared();   // 若带 #f= 分享链接打开，先还原方案
+applyTheme();
+render();
+</script>
+</body>
+</html>
